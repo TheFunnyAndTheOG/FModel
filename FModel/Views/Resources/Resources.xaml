@@ -105,6 +105,12 @@
                 Value="{Binding CUE4Parse.GameDirectory.DirectoryFilesView, IsAsync=True}" />
         <Setter Property="ScrollViewer.HorizontalScrollBarVisibility"
                 Value="Disabled" />
+        <Setter Property="ScrollViewer.CanContentScroll"
+                Value="True" />
+        <Setter Property="VirtualizingPanel.IsVirtualizing"
+                Value="True" />
+        <Setter Property="VirtualizingPanel.VirtualizationMode"
+                Value="Recycling" />
         <Setter Property="adonisExtensions:ScrollViewerExtension.VerticalScrollBarExpansionMode"
                 Value="NeverExpand" />
         <Setter Property="adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement"

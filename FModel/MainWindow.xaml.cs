@@ -109,6 +109,14 @@ public partial class MainWindow
             ApplicationViewModel.InitZlib()
         );
 
+        var auxiliaryInitialization = Task.WhenAll(
+            _applicationView.CUE4Parse.InitMappings(),
+            ApplicationViewModel.InitDetex(),
+            ApplicationViewModel.InitVgmStream(),
+            ApplicationViewModel.InitImGuiSettings(newOrUpdated),
+            UserSettings.Default.DecompileLua ? ApplicationViewModel.InitUnluac() : Task.CompletedTask
+        );
+
         await _applicationView.CUE4Parse.Initialize();
         await _applicationView.AesManager.InitAes();
         await _applicationView.UpdateProvider(true);
@@ -119,16 +127,12 @@ public partial class MainWindow
         await Task.WhenAll(
             _applicationView.CUE4Parse.VerifyConsoleVariables(),
             _applicationView.CUE4Parse.VerifyOnDemandArchives(),
-            _applicationView.CUE4Parse.InitMappings(),
-            ApplicationViewModel.InitDetex(),
-            ApplicationViewModel.InitVgmStream(),
-            ApplicationViewModel.InitImGuiSettings(newOrUpdated),
+            auxiliaryInitialization,
             Task.Run(() =>
             {
                 if (UserSettings.Default.DiscordRpc == EDiscordRpc.Always)
                     _discordHandler.Initialize(_applicationView.GameDisplayName);
-            }),
-            UserSettings.Default.DecompileLua ? ApplicationViewModel.InitUnluac() : Task.CompletedTask
+            })
         ).ConfigureAwait(false);
 
 #if DEBUG
