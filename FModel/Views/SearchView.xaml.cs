@@ -174,7 +174,7 @@ public partial class SearchView
         try
         {
             WindowState = WindowState.Minimized;
-            MainWindow.YesWeCats.AssetsListName.ItemsSource = null;
+MainWindow.YesWeCats.AssetsListName.ClearValue(ItemsControl.ItemsSourceProperty);
             var folder = await _applicationView.CustomDirectories.GoToCommand.JumpToAsync(entry.Directory);
             if (folder == null)
                 return;
