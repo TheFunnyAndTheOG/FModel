@@ -68,6 +68,10 @@ public class SearchViewModel : ViewModel
         private set => SetProperty(ref _searchResults, value);
     }
     private ListCollectionView _searchResultsView;
+    private string[] _filters = [];
+    private Regex _filterRegex;
+    private bool _isRegexValid = true;
+
     public ListCollectionView SearchResultsView
     {
         get
@@ -75,9 +79,10 @@ public class SearchViewModel : ViewModel
             if (_searchResultsView != null)
                 return _searchResultsView;
 
+            PrepareFilter();
             _searchResultsView = new ListCollectionView(SearchResults)
             {
-                Filter = e => ItemFilter(e, FilterText.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries)),
+                Filter = ItemFilter,
             };
             ResultsCount = _searchResultsView.Count;
             return _searchResultsView;
@@ -91,6 +96,7 @@ public class SearchViewModel : ViewModel
 
     public void RefreshFilter()
     {
+        PrepareFilter();
         SearchResultsView.Refresh();
         ResultsCount = SearchResultsView.Count;
     }
@@ -148,16 +154,38 @@ public class SearchViewModel : ViewModel
         ChangeCollection(sorted, RefFile);
     }
 
-    private bool ItemFilter(object item, IEnumerable<string> filters)
+    private void PrepareFilter()
+    {
+        _filters = FilterText.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        _filterRegex = null;
+        _isRegexValid = true;
+
+        if (!HasRegexEnabled)
+            return;
+
+        var options = RegexOptions.Compiled;
+        if (!HasMatchCaseEnabled)
+            options |= RegexOptions.IgnoreCase;
+
+        try
+        {
+            _filterRegex = new Regex(FilterText, options);
+        }
+        catch (ArgumentException)
+        {
+            _isRegexValid = false;
+        }
+    }
+
+    private bool ItemFilter(object item)
     {
         if (item is not GameFile entry)
             return true;
 
         if (!HasRegexEnabled)
-            return filters.All(x => entry.Path.Contains(x, HasMatchCaseEnabled ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase));
+            return _filters.All(x => entry.Path.Contains(x,
+                HasMatchCaseEnabled ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase));
 
-        var o = RegexOptions.None;
-        if (!HasMatchCaseEnabled) o |= RegexOptions.IgnoreCase;
-        return new Regex(FilterText, o).Match(entry.Path).Success;
+        return _isRegexValid && _filterRegex.IsMatch(entry.Path);
     }
 }
