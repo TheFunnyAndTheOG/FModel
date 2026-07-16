@@ -308,7 +308,7 @@
                                 Background="#705542"
                                 Margin="-10.5 0 4.5 0"
                                 VerticalAlignment="Bottom">
-                            <TextBlock Text="{Binding AssetsList.Assets.Count}"
+                            <TextBlock Text="{Binding AssetsList.Count}"
                                        Margin="2.5 0 2.5 0"
                                        Padding="1 0 0 0"
                                        FontSize="7"
@@ -325,7 +325,7 @@
                                             <MultiBinding StringFormat="{}{0} has {1} folders and {2} packages">
                                                 <Binding Path="Header" />
                                                 <Binding Path="FoldersView.Count" />
-                                                <Binding Path="AssetsList.Assets.Count" />
+                                                <Binding Path="AssetsList.Count" />
                                             </MultiBinding>
                                         </TextBlock.Text>
                                     </TextBlock>
@@ -340,7 +340,7 @@
                                     Property="Source"
                                     Value="/FModel;component/Resources/empty_folder.png" />
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding AssetsList.Assets.Count}"
+                        <DataTrigger Binding="{Binding AssetsList.Count}"
                                      Value="0">
                             <Setter TargetName="TreeBadge"
                                     Property="Visibility"

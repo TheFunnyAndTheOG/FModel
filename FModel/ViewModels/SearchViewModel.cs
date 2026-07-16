@@ -61,17 +61,32 @@ public class SearchViewModel : ViewModel
         private set => SetProperty(ref _refFile, value);
     }
 
-    public RangeObservableCollection<GameFile> SearchResults { get; }
-    public ListCollectionView SearchResultsView { get; }
+    private List<GameFile> _searchResults = [];
+    public List<GameFile> SearchResults
+    {
+        get => _searchResults;
+        private set => SetProperty(ref _searchResults, value);
+    }
+    private ListCollectionView _searchResultsView;
+    public ListCollectionView SearchResultsView
+    {
+        get
+        {
+            if (_searchResultsView != null)
+                return _searchResultsView;
+
+            _searchResultsView = new ListCollectionView(SearchResults)
+            {
+                Filter = e => ItemFilter(e, FilterText.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries)),
+            };
+            ResultsCount = _searchResultsView.Count;
+            return _searchResultsView;
+        }
+    }
 
     public SearchViewModel()
     {
-        SearchResults = [];
-        SearchResultsView = new ListCollectionView(SearchResults)
-        {
-            Filter = e => ItemFilter(e, FilterText.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries)),
-        };
-        ResultsCount = SearchResultsView.Count;
+        ResultsCount = 0;
     }
 
     public void RefreshFilter()
@@ -82,11 +97,15 @@ public class SearchViewModel : ViewModel
 
     public void ChangeCollection(IEnumerable<GameFile> files, GameFile refFile = null)
     {
-        SearchResults.Clear();
-        SearchResults.AddRange(files);
+        var results = files as List<GameFile> ?? files.ToList();
+        _searchResultsView = null;
+        SearchResults = results;
+        RaisePropertyChanged(nameof(SearchResultsView));
         RefFile = refFile;
-        ResultsCount = SearchResultsView.Count;
+        ResultsCount = results.Count;
     }
+
+    public void Clear() => ChangeCollection([]);
 
     public async Task CycleSortSizeMode()
     {
@@ -126,8 +145,7 @@ public class SearchViewModel : ViewModel
             };
         });
 
-        SearchResults.Clear();
-        SearchResults.AddRange(sorted);
+        ChangeCollection(sorted, RefFile);
     }
 
     private bool ItemFilter(object item, IEnumerable<string> filters)

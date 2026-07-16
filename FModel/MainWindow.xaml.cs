@@ -338,7 +338,7 @@ public partial class MainWindow
                 }
 
                 var childFolder = folder;
-                while (childFolder.Folders.Count == 1 && childFolder.AssetsList.Assets.Count == 0)
+                while (childFolder.Folders.Count == 1 && childFolder.AssetsList.Count == 0)
                 {
                     childFolder.IsExpanded = true;
                     childFolder = childFolder.Folders[0];
@@ -360,14 +360,14 @@ public partial class MainWindow
         if (e.Key != Key.Enter || sender is not TreeView treeView || treeView.SelectedItem is not TreeItem folder)
             return;
 
-        if ((folder.IsExpanded || folder.Folders.Count == 0) && folder.AssetsList.Assets.Count > 0)
+        if ((folder.IsExpanded || folder.Folders.Count == 0) && folder.AssetsList.Count > 0)
         {
             _applicationView.SelectedLeftTabIndex++;
             return;
         }
 
         var childFolder = folder;
-        while (childFolder.Folders.Count == 1 && childFolder.AssetsList.Assets.Count == 0)
+        while (childFolder.Folders.Count == 1 && childFolder.AssetsList.Count == 0)
         {
             childFolder.IsExpanded = true;
             childFolder = childFolder.Folders[0];

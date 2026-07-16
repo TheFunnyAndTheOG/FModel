@@ -150,7 +150,7 @@ public partial class SearchView
         MainWindow.YesWeCats.Activate();
 
         do
-        { await Task.Delay(100); } while (MainWindow.YesWeCats.AssetsListName.Items.Count < folder.AssetsList.Assets.Count);
+        { await Task.Delay(100); } while (MainWindow.YesWeCats.AssetsListName.Items.Count < folder.AssetsList.Count);
 
         while (!folder.IsSelected || MainWindow.YesWeCats.AssetsFolderName.SelectedItem != folder)
             await Task.Delay(50); // stops assets tab from opening too early
