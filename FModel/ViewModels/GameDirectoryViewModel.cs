@@ -137,6 +137,8 @@ public partial class GameDirectoryViewModel : ViewModel
         new(ReferenceEqualityComparer.Instance);
     private readonly ConcurrentQueue<FileItem> _pendingAdditions = new();
     private readonly ConcurrentQueue<FileItemUpdate> _pendingUpdates = new();
+    private FileItem _looseFilesContainer;
+    private int _pendingLooseFileCount;
     private int _publishScheduled;
 
     public GameDirectoryViewModel()
@@ -169,7 +171,7 @@ public partial class GameDirectoryViewModel : ViewModel
         if (fileCount < 1)
             return;
 
-        _pendingAdditions.Enqueue(new FileItem("Loose Files", fileCount, 0, true));
+        Interlocked.Add(ref _pendingLooseFileCount, fileCount);
         SchedulePublish();
     }
 
@@ -211,6 +213,20 @@ public partial class GameDirectoryViewModel : ViewModel
         while (_pendingAdditions.TryDequeue(out var file))
             additions.Add(file);
 
+        var looseFileCount = Interlocked.Exchange(ref _pendingLooseFileCount, 0);
+        if (looseFileCount > 0)
+        {
+            if (_looseFilesContainer is null)
+            {
+                _looseFilesContainer = new FileItem("Loose Files", looseFileCount, 0, true);
+                additions.Add(_looseFilesContainer);
+            }
+            else
+            {
+                _looseFilesContainer.FileCount += looseFileCount;
+            }
+        }
+
         if (additions.Count > 0)
             DirectoryFiles.AddRange(additions);
 
@@ -225,7 +241,7 @@ public partial class GameDirectoryViewModel : ViewModel
         }
 
         Interlocked.Exchange(ref _publishScheduled, 0);
-        if (!_pendingAdditions.IsEmpty || !_pendingUpdates.IsEmpty)
+        if (!_pendingAdditions.IsEmpty || !_pendingUpdates.IsEmpty || Volatile.Read(ref _pendingLooseFileCount) > 0)
             SchedulePublish();
     }
 
