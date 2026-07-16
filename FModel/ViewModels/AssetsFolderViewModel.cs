@@ -177,6 +177,8 @@ public sealed class TreeItem : ViewModel
 
 public class AssetsFolderViewModel
 {
+    private Dictionary<string, TreeItem> _foldersByPath = new(StringComparer.Ordinal);
+
     public RangeObservableCollection<TreeItem> Folders { get; }
     public ICollectionView FoldersView { get; }
 
@@ -184,6 +186,38 @@ public class AssetsFolderViewModel
     {
         Folders = [];
         FoldersView = new ListCollectionView(Folders) { SortDescriptions = { new SortDescription("Header", ListSortDirection.Ascending) } };
+    }
+
+    public void Clear()
+    {
+        Folders.Clear();
+        _foldersByPath = new Dictionary<string, TreeItem>(StringComparer.Ordinal);
+    }
+
+    public bool TryGetFolder(string directory, out TreeItem folder)
+    {
+        folder = null;
+        if (string.IsNullOrEmpty(directory))
+            return false;
+
+        directory = directory.TrimEnd(Path.AltDirectorySeparatorChar);
+        if (_foldersByPath.TryGetValue(directory, out folder))
+            return true;
+
+        // Preserve the previous behavior where only the root segment was case-insensitive.
+        var separator = directory.IndexOf(Path.AltDirectorySeparatorChar);
+        var rootName = separator < 0 ? directory : directory[..separator];
+        var root = Folders.FirstOrDefault(x => x.Header.Equals(rootName, StringComparison.OrdinalIgnoreCase));
+        if (root == null)
+            return false;
+
+        if (separator < 0)
+        {
+            folder = root;
+            return true;
+        }
+
+        return _foldersByPath.TryGetValue(string.Concat(root.Header, directory[separator..]), out folder);
     }
 
     public void BulkPopulate(IReadOnlyCollection<GameFile> entries)
@@ -283,6 +317,7 @@ public class AssetsFolderViewModel
 
         Application.Current.Dispatcher.Invoke(() =>
         {
+            _foldersByPath = foldersByPath;
             Folders.AddRange(treeItems);
 
             if (treeItems.Count > 0)

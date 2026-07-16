@@ -291,6 +291,19 @@
                 Value="Docked" />
         <Setter Property="HorizontalContentAlignment"
                 Value="Stretch" />
+        <Setter Property="VirtualizingPanel.IsVirtualizing"
+                Value="True" />
+        <Setter Property="VirtualizingPanel.VirtualizationMode"
+                Value="Recycling" />
+        <Setter Property="ScrollViewer.CanContentScroll"
+                Value="True" />
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <controls:NavigableVirtualizingStackPanel />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
         <Setter Property="ItemTemplate">
             <Setter.Value>
                 <HierarchicalDataTemplate ItemsSource="{Binding FoldersView, IsAsync=True}">
@@ -572,6 +585,13 @@
                        BasedOn="{StaticResource TreeViewItemStyle}">
                     <Setter Property="HorizontalContentAlignment"
                             Value="Stretch" />
+                    <Setter Property="ItemsPanel">
+                        <Setter.Value>
+                            <ItemsPanelTemplate>
+                                <controls:NavigableVirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </Setter.Value>
+                    </Setter>
                     <Setter Property="IsSelected"
                             Value="{Binding IsSelected, Mode=TwoWay}" />
                     <Setter Property="IsExpanded"

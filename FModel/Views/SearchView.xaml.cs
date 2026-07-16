@@ -141,30 +141,35 @@ public partial class SearchView
 
     private async Task NavigateToAssetAndSelect(GameFile entry)
     {
-        WindowState = WindowState.Minimized;
-        MainWindow.YesWeCats.AssetsListName.ItemsSource = null;
-        var folder = _applicationView.CustomDirectories.GoToCommand.JumpTo(entry.Directory);
-        if (folder == null)
-            return;
-
-        MainWindow.YesWeCats.Activate();
-
-        do
-        { await Task.Delay(100); } while (MainWindow.YesWeCats.AssetsListName.Items.Count < folder.AssetsList.Count);
-
-        while (!folder.IsSelected || MainWindow.YesWeCats.AssetsFolderName.SelectedItem != folder)
-            await Task.Delay(50); // stops assets tab from opening too early
-
-        ApplicationService.ApplicationView.SelectedLeftTabIndex = 2; // assets tab
-        do
+        _applicationView.IsAssetPreviewLoadingSuspended = true;
+        try
         {
-            await Task.Delay(100);
-            var vm = MainWindow.YesWeCats.AssetsListName.Items
-                .OfType<GameFileViewModel>()
-                .FirstOrDefault(x => x.Asset == entry);
+            WindowState = WindowState.Minimized;
+            MainWindow.YesWeCats.AssetsListName.ItemsSource = null;
+            var folder = await _applicationView.CustomDirectories.GoToCommand.JumpToAsync(entry.Directory);
+            if (folder == null)
+                return;
+
+            MainWindow.YesWeCats.Activate();
+
+            while (MainWindow.YesWeCats.AssetsListName.Items.Count < folder.AssetsList.Count)
+                await Task.Delay(10);
+
+            ApplicationService.ApplicationView.SelectedLeftTabIndex = 2; // assets tab
+            GameFileViewModel vm;
+            while ((vm = MainWindow.YesWeCats.AssetsListName.Items
+                    .OfType<GameFileViewModel>()
+                    .FirstOrDefault(x => x.Asset == entry)) == null)
+                await Task.Delay(10);
+
             MainWindow.YesWeCats.AssetsListName.SelectedItem = vm;
             MainWindow.YesWeCats.AssetsListName.ScrollIntoView(vm);
-        } while (MainWindow.YesWeCats.AssetsListName.SelectedItem == null);
+        }
+        finally
+        {
+            _applicationView.IsAssetPreviewLoadingSuspended = false;
+            MainWindow.YesWeCats.RefreshVisibleAssetPreviews();
+        }
     }
 
     private async void OnAssetExtract(object sender, RoutedEventArgs e)

@@ -60,6 +60,8 @@ public class ApplicationViewModel : ViewModel
         }
     }
 
+    public bool IsAssetPreviewLoadingSuspended { get; set; }
+
     private int _selectedLeftTabIndex;
     public int SelectedLeftTabIndex
     {
