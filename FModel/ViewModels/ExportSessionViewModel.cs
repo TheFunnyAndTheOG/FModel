@@ -18,7 +18,6 @@ using FModel.Framework;
 using FModel.Settings;
 using FModel.Views;
 using FModel.Views.Resources.Controls;
-using FModel.Views.Snooper;
 using Serilog.Events;
 
 namespace FModel.ViewModels;
@@ -145,7 +144,7 @@ public class ExportSessionViewModel : ViewModel
 
     private ExportSessionViewModel()
     {
-        ImGuiSink.Instance.OnExporterLogEvent += OnLogEvent;
+        // ImGuiSink.Instance.OnExporterLogEvent += OnLogEvent;
     }
 
     private void OnLogEvent(LogEvent log)

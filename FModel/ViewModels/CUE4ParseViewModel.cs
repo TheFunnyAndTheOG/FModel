@@ -9,7 +9,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using AdonisUI.Controls;
 using CUE4Parse;
 using CUE4Parse.Compression;
@@ -78,11 +77,8 @@ using FModel.Services;
 using FModel.Settings;
 using FModel.Views;
 using FModel.Views.Resources.Controls;
-using FModel.Views.Snooper;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using OpenTK.Windowing.Common;
-using OpenTK.Windowing.Desktop;
 using Serilog;
 using SkiaSharp;
 using Svg.Skia;
@@ -114,39 +110,6 @@ public class CUE4ParseViewModel : ViewModel
     {
         get => _modelIsWaitingAnimation;
         set => SetProperty(ref _modelIsWaitingAnimation, value);
-    }
-
-    public bool IsSnooperOpen => _snooper is { Exists: true, IsVisible: true };
-    private Snooper _snooper;
-    public Snooper SnooperViewer
-    {
-        get
-        {
-            if (_snooper != null) return _snooper;
-
-            return Application.Current.Dispatcher.Invoke(delegate
-            {
-                var scale = ImGuiController.GetDpiScale();
-                var htz = Snooper.GetMaxRefreshFrequency();
-                return _snooper = new Snooper(
-                    new GameWindowSettings { UpdateFrequency = htz },
-                    new NativeWindowSettings
-                    {
-                        ClientSize = new OpenTK.Mathematics.Vector2i(
-                            Convert.ToInt32(SystemParameters.MaximizedPrimaryScreenWidth * .75 * scale),
-                            Convert.ToInt32(SystemParameters.MaximizedPrimaryScreenHeight * .85 * scale)),
-                        NumberOfSamples = Constants.SAMPLES_COUNT,
-                        WindowBorder = WindowBorder.Resizable,
-                        Flags = ContextFlags.ForwardCompatible,
-                        Profile = ContextProfile.Core,
-                        Vsync = VSyncMode.Adaptive,
-                        APIVersion = new Version(4, 6),
-                        StartVisible = false,
-                        StartFocused = false,
-                        Title = "3D Viewer"
-                    });
-            });
-        }
     }
 
     public AbstractVfsFileProvider Provider { get; }
@@ -1569,21 +1532,22 @@ public class CUE4ParseViewModel : ViewModel
                                            pkg.Name.Contains("/RenderSwitch_Materials/", StringComparison.OrdinalIgnoreCase) ||
                                            pkg.Name.Contains("/MI_BPTile/", StringComparison.OrdinalIgnoreCase))):
             {
-                if (SnooperViewer.TryLoadExport(cancellationToken, dummy, pointer.Object))
-                    SnooperViewer.Run();
+                SnooperViewModel.Instance.Load(pointer.Object.Value);
+                // if (SnooperViewer.TryLoadExport(cancellationToken, dummy, pointer.Object))
+                //     SnooperViewer.Run();
                 return true;
             }
             case UMaterialInstance when isNone && ModelIsOverwritingMaterial && pointer.Object.Value is UMaterialInstance m:
             {
-                SnooperViewer.Renderer.Swap(m);
-                SnooperViewer.Run();
+                // SnooperViewer.Renderer.Swap(m);
+                // SnooperViewer.Run();
                 return true;
             }
             case UAnimSequenceBase when isNone && UserSettings.Default.PreviewAnimations || ModelIsWaitingAnimation:
             {
                 // animate all animations using their specified skeleton or when we explicitly asked for a loaded model to be animated (ignoring whether we wanted to preview animations)
-                SnooperViewer.Renderer.Animate(pointer.Object.Value);
-                SnooperViewer.Run();
+                // SnooperViewer.Renderer.Animate(pointer.Object.Value);
+                // SnooperViewer.Run();
                 return true;
             }
             case UStaticMesh when HasFlag(bulk, EBulkType.Meshes):

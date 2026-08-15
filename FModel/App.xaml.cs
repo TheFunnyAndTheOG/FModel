@@ -7,11 +7,10 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Threading;
-using CUE4Parse;
 using FModel.Framework;
 using FModel.Services;
 using FModel.Settings;
-using FModel.Views.Snooper;
+using FModel.ViewModels;
 using Newtonsoft.Json;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
@@ -134,7 +133,7 @@ public partial class App
                 .Filter.ByIncludingOnly(IsConversionLibrary)
                 .WriteTo.Console(outputTemplate: template2, theme: AnsiConsoleTheme.Literate)
                 .WriteTo.File(outputTemplate: template2, path: filePath, shared: true))
-            .MinimumLevel.Override("CUE4Parse_Conversion", LogEventLevel.Verbose).WriteTo.Sink(ImGuiSink.Instance)
+            // .MinimumLevel.Override("CUE4Parse_Conversion", LogEventLevel.Verbose).WriteTo.Sink(ImGuiSink.Instance)
             .CreateLogger();
 
         CacheManager.MigrateLegacyFiles();
@@ -150,6 +149,7 @@ public partial class App
 
     private void AppExit(object sender, ExitEventArgs e)
     {
+        SnooperViewModel.Instance.Dispose();
         Log.Information("––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––");
         Log.CloseAndFlush();
         UserSettings.Save();

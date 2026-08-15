@@ -169,19 +169,18 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="NVorbis" Version="0.10.5" />
     <PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
-    <PackageReference Include="OpenTK" Version="4.9.4" />
     <PackageReference Include="RestSharp" Version="114.0.0" />
     <PackageReference Include="Serilog" Version="4.3.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="SkiaSharp.HarfBuzz" Version="[2.88.9]" />
     <PackageReference Include="Svg.Skia" Version="[4.8.0]" /> <!--because of skia 3.0 in newer versions-->
-    <PackageReference Include="Twizzle.ImGui-Bundle.NET" Version="1.91.5.2" />
     <PackageReference Include="VirtualizingWrapPanel" Version="2.5.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CUE4Parse\CUE4Parse-Conversion\CUE4Parse-Conversion.csproj" />
     <ProjectReference Include="..\CUE4Parse\CUE4Parse\CUE4Parse.csproj" />
+    <ProjectReference Include="..\Snooper\Editor\Editor.csproj" />
   </ItemGroup>
 
   <ItemGroup>

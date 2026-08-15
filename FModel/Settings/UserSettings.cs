@@ -12,7 +12,6 @@ using FModel.Extensions.Themes;
 using FModel.Framework;
 using FModel.ViewModels;
 using FModel.ViewModels.ApiEndpoints.Models;
-using FModel.Views.Snooper;
 using Newtonsoft.Json;
 
 namespace FModel.Settings;
@@ -562,13 +561,6 @@ public sealed class UserSettings : ViewModel
     {
         get => _animateWithRotationOnly;
         set => SetProperty(ref _animateWithRotationOnly, value);
-    }
-
-    private Camera.WorldMode _cameraMode = Camera.WorldMode.Arcball;
-    public Camera.WorldMode CameraMode
-    {
-        get => _cameraMode;
-        set => SetProperty(ref _cameraMode, value);
     }
 
     private int _previewMaxTextureSize = 1024;
