@@ -13,6 +13,7 @@ using System.Windows.Threading;
 using CUE4Parse_Conversion;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse.Utils;
+using Editor;
 using FModel.Extensions;
 using FModel.Framework;
 using FModel.Settings;
@@ -144,7 +145,7 @@ public class ExportSessionViewModel : ViewModel
 
     private ExportSessionViewModel()
     {
-        // ImGuiSink.Instance.OnExporterLogEvent += OnLogEvent;
+        ImGuiSink.Instance.OnExporterLogEvent += OnLogEvent;
     }
 
     private void OnLogEvent(LogEvent log)

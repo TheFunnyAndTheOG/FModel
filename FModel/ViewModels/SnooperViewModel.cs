@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
 using CUE4Parse.UE4.Assets.Exports;
@@ -11,8 +10,6 @@ using CUE4Parse.UE4.Objects.Engine;
 using Editor;
 using FModel.Framework;
 using FModel.Services;
-using OpenTK.Windowing.Desktop;
-using Serilog;
 using Snooper.Rendering.Actors;
 using Snooper.Rendering.Components;
 using Snooper.Rendering.Components.Light;
@@ -25,60 +22,49 @@ public class SnooperViewModel : ViewModel, IDisposable
 {
     public static SnooperViewModel Instance { get; } = new();
 
-    private readonly Lazy<EditorWindow> _editor;
+    private readonly SnooperHost _host;
 
     private SnooperViewModel()
     {
         var scale = GetDpiScale();
         var htz = GetMaxRefreshFrequency();
-        var width = Convert.ToInt32(SystemParameters.MaximizedPrimaryScreenWidth * .75 * scale);
+        var width = Convert.ToInt32(SystemParameters.MaximizedPrimaryScreenWidth * .9 * scale);
         var height = Convert.ToInt32(SystemParameters.MaximizedPrimaryScreenHeight * .85 * scale);
 
-        _editor = new Lazy<EditorWindow>(() => StartEditor(htz, width, height));
-    }
-
-    private static EditorWindow StartEditor(int htz, int width, int height)
-    {
-        GLFWProvider.CheckForMainThread = false;
-
-        var ready = new ManualResetEventSlim();
-        EditorWindow? editor = null;
-        Exception? failure = null;
-
-        new Thread(() =>
-        {
-            try
-            {
-                editor = new EditorWindow(htz, width, height, ApplicationService.ApplicationView.CUE4Parse.Provider, false, true);
-            }
-            catch (Exception e)
-            {
-                failure = e;
-                return;
-            }
-            finally
-            {
-                ready.Set();
-            }
-
-            try
-            {
-                editor.Run();
-            }
-            catch (Exception e)
-            {
-                Log.Error(e, "Snooper crashed");
-            }
-        }) { IsBackground = true, Name = "Snooper" }.Start();
-
-        ready.Wait();
-        return editor ?? throw new InvalidOperationException("Snooper failed to start", failure);
+        _host = new SnooperHost(() => new EditorWindow(htz, width, height, ApplicationService.ApplicationView.CUE4Parse.Provider, false, true));
     }
 
     public void Load(UObject? obj)
     {
-        var scene = new Actor("Example Scene");
+        Actor? actor = obj switch
+        {
+            UStaticMesh sm => new MeshActor(sm),
+            USkeletalMesh sk => new MeshActor(sk),
+            UWorld w => new WorldActor(w),
+            _ => null
+        };
+
+        var editor = _host.Window;
+        editor.Invoke(() =>
+        {
+            if (editor.Manager.RootActor == null)
+                editor.Manager.LoadScene(CreateScene(obj is UWorld));
+
+            if (actor != null)
+                editor.Manager.LoadScene(actor);
+
+            editor.Show();
+        });
+    }
+
+    private Actor CreateScene(bool transparentGrid)
+    {
+        var scene = new Actor("Scene");
         scene.Components.Add(new BoxComponent(Vector3.Zero, Vector3.One));
+
+        var grid = new Actor("Grid");
+        grid.Components.Add(transparentGrid ? new GridComponent() : new OpaqueGridComponent());
+        scene.Children.Add(grid);
 
         var camera = new CameraActor("Camera");
         camera.CameraComponent.LocalTransform.Position = new Vector3(1, 2, -0.5f);
@@ -86,38 +72,15 @@ public class SnooperViewModel : ViewModel, IDisposable
         scene.Children.Add(camera);
 
         var sun = new Actor("Sun Light");
-        sun.Components.Add(new DirectionalLightComponent(MathF.PI, new Vector3(1.0f, 0.87f, 0.72f), new Transform(new Quaternion(new Vector3(0.5f, -0.5f, 0.0f), 1.0f)), "Directional Light"));
+        sun.Components.Add(new DirectionalLightComponent(MathF.PI, new Vector3(1.0f, 0.87f, 0.72f), new Transform(new Vector3(16.5f, 0, 0), new Quaternion(new Vector3(0.5f, -0.5f, 0.0f), 1.0f)), "Directional Light"));
         scene.Children.Add(sun);
 
-        GridComponent gridComponent = new OpaqueGridComponent();
-        switch (obj)
-        {
-            case UStaticMesh sm:
-                scene.Children.Add(new MeshActor(sm));
-                break;
-            case USkeletalMesh sk:
-                scene.Children.Add(new MeshActor(sk));
-                break;
-            case UWorld w:
-                gridComponent = new GridComponent();
-                scene.Children.Add(new WorldActor(w));
-                break;
-        }
-        var grid = new Actor("Grid");
-        grid.Components.Add(gridComponent);
-        scene.Children.Insert(0, grid);
-
-        var editor = _editor.Value;
-        editor.Invoke(() =>
-        {
-            editor.Manager.LoadScene(scene);
-            editor.Show();
-        });
+        return scene;
     }
 
     public void Run()
     {
-        var editor = _editor.Value;
+        var editor = _host.Window;
         editor.Invoke(editor.Show);
     }
 
@@ -189,9 +152,5 @@ public class SnooperViewModel : ViewModel, IDisposable
         return rf;
     }
 
-    public void Dispose()
-    {
-        if (!_editor.IsValueCreated) return;
-        _editor.Value.Dispose();
-    }
+    public void Dispose() => _host.Dispose();
 }

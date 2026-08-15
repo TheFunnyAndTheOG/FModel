@@ -7,6 +7,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Threading;
+using Editor;
 using FModel.Framework;
 using FModel.Services;
 using FModel.Settings;
@@ -116,15 +117,14 @@ public partial class App
 #else
         var filePath = Path.Combine(UserSettings.Default.OutputDirectory, "Logs", $"FModel-Log-{DateTime.Now:yyyy-MM-dd}.log");
 #endif
-        const string template1 = "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Enriched}: {Message:lj}{NewLine}{Exception}";
+        const string template1 = "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}";
         const string template2 = "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] [{ClassName}] {ObjectPath}: {Message:lj}{NewLine}{Exception}";
         Log.Logger = new LoggerConfiguration()
 #if DEBUG
-            .Enrich.With<SourceEnricher>()
             .MinimumLevel.Verbose()
-#else
-            .Enrich.With<CallerEnricher>()
 #endif
+            .Enrich.FromLogContext()
+            .Enrich.WithProperty("SourceContext", "FModel")
             .WriteTo.Logger(lc => lc
                 .Filter.ByExcluding(IsConversionLibrary)
                 .WriteTo.Console(outputTemplate: template1, theme: AnsiConsoleTheme.Literate)
@@ -133,7 +133,8 @@ public partial class App
                 .Filter.ByIncludingOnly(IsConversionLibrary)
                 .WriteTo.Console(outputTemplate: template2, theme: AnsiConsoleTheme.Literate)
                 .WriteTo.File(outputTemplate: template2, path: filePath, shared: true))
-            // .MinimumLevel.Override("CUE4Parse_Conversion", LogEventLevel.Verbose).WriteTo.Sink(ImGuiSink.Instance)
+            .MinimumLevel.Override("CUE4Parse_Conversion", LogEventLevel.Verbose)
+            .WriteTo.Sink(ImGuiSink.Instance)
             .CreateLogger();
 
         CacheManager.MigrateLegacyFiles();
