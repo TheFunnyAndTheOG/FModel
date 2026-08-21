@@ -1691,6 +1691,55 @@ public class CUE4ParseViewModel : ViewModel
         return true;
     }
 
+    public bool DecompileShader(GameFile entry, bool AddTab = true)
+    {
+        if (TabControl.CanAddTabs && AddTab)
+        {
+            ApplicationService.ApplicationView.IsAssetsExplorerVisible = false;
+            TabControl.AddTab(entry);
+        }
+        else TabControl.SelectedTab.SoftReset(entry);
+
+        TabControl.SelectedTab.TitleExtra = "Decompiled Shader";
+        TabControl.SelectedTab.Highlighter = AvalonExtensions.HighlighterSelector("cpp");
+
+        string shader = null;
+        var pkg = Provider.LoadPackage(entry);
+        for (var i = 0; i < pkg.ExportMapLength; i++)
+        {
+            var pointer = new FPackageIndex(pkg, i + 1).ResolvedObject;
+            if (pointer?.Object?.Value is not UMaterialInterface material)
+                continue;
+
+            // Real per-pixel authored graph math (Abs, Add, Clamp, DotProduct, UV-driven work) only
+            // exists as compiled DXBC bytecode - decompile that first when it's reachable.
+            var pixelShader = PixelShaderDecompiler.DecompilePixelShaderToPseudo(material);
+            // The CPU-folded uniform expression tree (parameters/constant math with no texture or
+            // UV dependency) - always available when a legacy shader map exists, cheap, and useful
+            // as a cross-check even when the pixel shader decompile above also succeeded.
+            var uniforms = material.DecompileShaderToPseudo();
+
+            var pseudo = string.Join("\n\n", new[] { pixelShader, uniforms }.Where(s => !string.IsNullOrEmpty(s)));
+            if (string.IsNullOrEmpty(pseudo)) continue;
+
+            shader = shader is null ? pseudo : $"{shader}\n\n{pseudo}";
+        }
+
+        if (string.IsNullOrEmpty(shader))
+        {
+            TabControl.SelectedTab.SetDocumentText(
+                "// No shader data found for this asset.\n" +
+                "// Either this isn't a Material/MaterialInstance, it was cooked without inline\n" +
+                "// shader maps, or its engine version's format isn't decompiled yet (pre-4.25 and\n" +
+                "// 4.26/4.27 are; UE5's preshader encoding is not).",
+                false, false);
+            return false;
+        }
+
+        TabControl.SelectedTab.SetDocumentText(shader, false, false);
+        return true;
+    }
+
     private void SaveAndPlaySound(CancellationToken cancellationToken, string fullPath, string ext, byte[] data, bool saveAudio, bool updateUi)
     {
         if (fullPath.StartsWith('/')) fullPath = fullPath[1..];
