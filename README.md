@@ -1,3 +1,5 @@
+Ported animbp and ctrl rig changes from https://github.com/Corifiy/FModel
+
 FModel - An Unreal Engine Archives Explorer in C#
 ------------------------------------------
 
