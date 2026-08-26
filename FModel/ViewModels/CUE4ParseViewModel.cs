@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -76,6 +76,7 @@ using FModel.Extensions;
 using FModel.Framework;
 using FModel.Services;
 using FModel.Settings;
+using FModel.ViewModels.ApiEndpoints.Models;
 using FModel.Views;
 using FModel.Views.Resources.Controls;
 using FModel.Views.Snooper;
@@ -90,6 +91,7 @@ using UE4Config.Parsing;
 using static CUE4Parse.UE4.Versions.EGame;
 using Application = System.Windows.Application;
 using FGuid = CUE4Parse.UE4.Objects.Core.Misc.FGuid;
+using Version = System.Version;
 
 namespace FModel.ViewModels;
 
@@ -374,6 +376,20 @@ public class CUE4ParseViewModel : ViewModel
         }
     }
 
+    private void RegisterArchivesFromManifest(DefaultFileProvider provider, FBuildPatchAppManifest manifest)
+    {
+        var archiveFiles = manifest.Files.Where(x =>
+            _fnLiveRegex.IsMatch(x.FileName) &&
+            (x.FileName.EndsWith(".pak", StringComparison.OrdinalIgnoreCase) ||
+             x.FileName.EndsWith(".utoc", StringComparison.OrdinalIgnoreCase))).ToList();
+
+        Parallel.ForEach(archiveFiles, fileManifest =>
+        {
+            provider.RegisterVfs(fileManifest.FileName, [fileManifest.GetStream()],
+                it => new FRandomAccessStreamArchive(it, manifest.FindFile(it)!.GetStream(), provider.Versions));
+        });
+    }
+
     /// <summary>
     /// load virtual files system from GameDirectory
     /// </summary>
@@ -550,6 +566,54 @@ public class CUE4ParseViewModel : ViewModel
             var onDemandCount = await Provider.MountAsync();
             FLogger.Append(ELog.Information, () =>
                 FLogger.Text($"{onDemandCount} on-demand archive{(onDemandCount > 1 ? "s" : "")} streamed via epicgames.com", Constants.WHITE, true));
+        });
+    }
+
+    public Task VerifyCloudArchives()
+    {
+        if (Provider is not DefaultFileProvider p || !Provider.ProjectName.Equals("FortniteGame", StringComparison.OrdinalIgnoreCase))
+            return Task.CompletedTask;
+
+        var cloudContentPath = Path.Combine(UserSettings.Default.GameDirectory, "..\\..\\..\\Cloud\\cloudcontent.json");
+        if (!File.Exists(cloudContentPath))
+            return Task.CompletedTask;
+
+        return Task.Run(async () =>
+        {
+            var startTs = Stopwatch.GetTimestamp();
+
+            var cloudContent = JsonConvert.DeserializeObject<CloudContent>(await File.ReadAllTextAsync(cloudContentPath));
+            if (cloudContent is null || string.IsNullOrEmpty(cloudContent.ManifestPath))
+                return;
+
+            // content builds live in their own CloudDir (Builds/Fortnite/Content/CloudDir), not the one the
+            // main game build uses, so the chunk base url has to follow the manifest instead of being hardcoded
+            var manifestUrl = "https://egdownload.fastly-edge.com/" + cloudContent.ManifestPath;
+            var manifestBytes = await _chunkClient.GetByteArrayAsync(manifestUrl);
+
+            var manifestOptions = new ManifestParseOptions
+            {
+                ChunkCacheDirectory = CacheManager.ChunksDirectory,
+                ManifestCacheDirectory = CacheManager.ManifestsDirectory,
+                ChunkBaseUrl = manifestUrl.SubstringBeforeLast('/') + '/',
+                Decompressor = Compression.Decompressor,
+                Client = _chunkClient,
+                CacheChunksAsIs = false
+            };
+
+            var contentManifest = FBuildPatchAppManifest.Deserialize(manifestBytes, manifestOptions);
+
+            RegisterArchivesFromManifest(p, contentManifest);
+
+            // keys were already submitted by LoadVfs, so MountAsync only picks up the unencrypted archives,
+            // resubmitting what we know mounts the encrypted ones we just registered
+            var cloudCount = await Provider.MountAsync();
+            cloudCount += await Provider.SubmitKeysAsync(Provider.Keys.ToArray());
+            var elapsedTime = Stopwatch.GetElapsedTime(startTs);
+
+            var message = $"{cloudCount} cloud archive{(cloudCount > 1 ? "s" : "")} streamed via epicgames.com in {elapsedTime.TotalMilliseconds:F1}ms";
+            Log.Information(message);
+            FLogger.Append(ELog.Information, () => FLogger.Text(message, Constants.WHITE, true));
         });
     }
 

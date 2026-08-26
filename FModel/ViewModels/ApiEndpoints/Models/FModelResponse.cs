@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using CUE4Parse.UE4.Versions;
 using FModel.Creator;
@@ -28,6 +28,11 @@ public class ManifestInfoDilly
 {
     [J] public string AppName { get; private set; }
     [J] public string DownloadUrl { get; private set; }
+}
+
+public class CloudContent
+{
+    [J] public string ManifestPath { get; private set; }
 }
 
 public class Donator
