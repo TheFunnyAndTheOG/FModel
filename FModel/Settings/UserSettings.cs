@@ -68,6 +68,7 @@ public sealed class UserSettings : ViewModel
             Default.MaterialExportFormat,
             Default.SaveEmbeddedMaterials,
             Default.SaveMorphTargets,
+            Default.BakeFacialPoses,
             Default.SocketExportFormat,
             Default.CompressionFormat
         );
@@ -618,6 +619,13 @@ public sealed class UserSettings : ViewModel
     {
         get => _saveMorphTargets;
         set => SetProperty(ref _saveMorphTargets, value);
+    }
+
+    private bool _bakeFacialPoses = true;
+    public bool BakeFacialPoses
+    {
+        get => _bakeFacialPoses;
+        set => SetProperty(ref _bakeFacialPoses, value);
     }
 
     private bool _saveEmbeddedMaterials = true;

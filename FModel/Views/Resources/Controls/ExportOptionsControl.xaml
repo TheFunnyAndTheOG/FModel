@@ -32,6 +32,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
@@ -269,11 +270,27 @@
                        Text="For geometry-only exports, it can be significantly faster to disable this option." />
         </Grid>
 
-        <TextBlock Grid.Row="19" Grid.Column="0" Text="Export Morph Targets" VerticalAlignment="Center" Margin="0 0 0 15" />
-        <CheckBox Grid.Row="19" Grid.Column="2" Grid.ColumnSpan="3" Margin="0 0 0 15"
+        <TextBlock Grid.Row="19" Grid.Column="0" Text="Export Morph Targets" VerticalAlignment="Center" />
+        <CheckBox Grid.Row="19" Grid.Column="2" Grid.ColumnSpan="3"
                   IsChecked="{Binding ExportMorphTargets, Mode=TwoWay}"
                   Content="{Binding IsChecked, RelativeSource={RelativeSource Self}, Converter={x:Static converters:BoolToToggleConverter.Instance}}"
                   Style="{DynamicResource {x:Static adonisUi:Styles.ToggleSwitch}}" />
+
+        <TextBlock Grid.Row="20" Grid.Column="0" Text="Bake Facial Poses" VerticalAlignment="Center" Margin="0 0 0 15" />
+        <Grid Grid.Row="20" Grid.Column="2" Grid.ColumnSpan="3" Margin="0 0 0 15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <CheckBox Grid.Column="0"
+                      IsChecked="{Binding BakeFacialPoses, Mode=TwoWay}"
+                      Content="{Binding IsChecked, RelativeSource={RelativeSource Self}, Converter={x:Static converters:BoolToToggleConverter.Instance}}"
+                      Style="{DynamicResource {x:Static adonisUi:Styles.ToggleSwitch}}" />
+            <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="5 0 0 0" FontSize="11"
+                       Foreground="{DynamicResource {x:Static adonisUi:Brushes.DisabledForegroundBrush}}"
+                       Text="Skins a head's DNA or pose asset expressions into extra morph targets." />
+        </Grid>
     </Grid>
 </UserControl>
 

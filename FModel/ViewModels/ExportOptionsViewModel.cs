@@ -160,6 +160,12 @@ public class ExportOptionsViewModel : ViewModel
         set => SetProperty(ref field, value);
     }
 
+    public bool BakeFacialPoses
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
     public bool ExportAllTextureMips
     {
         get;
@@ -186,6 +192,7 @@ public class ExportOptionsViewModel : ViewModel
         SelectedTextureFormat = UserSettings.Default.TextureExportFormat;
         ExportHdrTexturesAsHdr = UserSettings.Default.SaveHdrTexturesAsHdr;
         ExportMorphTargets = UserSettings.Default.SaveMorphTargets;
+        BakeFacialPoses = UserSettings.Default.BakeFacialPoses;
         TextureQuality = UserSettings.Default.TextureQuality;
         ExportAllTextureMips = UserSettings.Default.ExportAllTextureMips;
         ExportImmediately = UserSettings.Default.ExportImmediately;
@@ -208,6 +215,7 @@ public class ExportOptionsViewModel : ViewModel
         UserSettings.Default.TextureExportFormat = SelectedTextureFormat;
         UserSettings.Default.SaveHdrTexturesAsHdr = ExportHdrTexturesAsHdr;
         UserSettings.Default.SaveMorphTargets = ExportMorphTargets;
+        UserSettings.Default.BakeFacialPoses = BakeFacialPoses;
         UserSettings.Default.TextureQuality = TextureQuality;
         UserSettings.Default.ExportAllTextureMips = ExportAllTextureMips;
         UserSettings.Default.ExportImmediately = ExportImmediately;
@@ -229,6 +237,7 @@ public class ExportOptionsViewModel : ViewModel
         SelectedMaterialDepth,
         ExportMaterials,
         ExportMorphTargets,
+        BakeFacialPoses,
         SelectedSocketFormat,
         SelectedCompressionFormat
     );
