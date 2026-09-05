@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Threading;
 using CUE4Parse;
+using CUE4Parse.UE4.Assets.Exports.Animation;
 using FModel.Framework;
 using FModel.Services;
 using FModel.Settings;
@@ -49,6 +50,10 @@ public partial class App
         {
             UserSettings.Default = new UserSettings();
         }
+
+        // Deserialization assigns the backing field, so the property setter that mirrors this into
+        // CUE4Parse never runs. Push it once the settings are loaded.
+        AdditiveBasePose.UseDependencyGraph = UserSettings.Default.ResolveAdditiveBaseFromRegistry;
 
         var createMe = false;
         if (!Directory.Exists(UserSettings.Default.OutputDirectory))

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse_Conversion.Options;
@@ -69,6 +70,7 @@ public sealed class UserSettings : ViewModel
             Default.SaveEmbeddedMaterials,
             Default.SaveMorphTargets,
             Default.BakeFacialPoses,
+            Default.PreserveAdditiveAnimations,
             Default.SocketExportFormat,
             Default.CompressionFormat
         );
@@ -626,6 +628,30 @@ public sealed class UserSettings : ViewModel
     {
         get => _bakeFacialPoses;
         set => SetProperty(ref _bakeFacialPoses, value);
+    }
+
+    private bool _preserveAdditiveAnimations;
+    public bool PreserveAdditiveAnimations
+    {
+        get => _preserveAdditiveAnimations;
+        set => SetProperty(ref _preserveAdditiveAnimations, value);
+    }
+
+    /// <summary>
+    /// Read the shipped asset registry's dependency graph to find the base pose of an additive
+    /// animation whose reference the cook stripped. Exact, but the first lookup in a session pays
+    /// for reading the graph. Off falls back to Fortnite's naming convention, which is instant and
+    /// usually right.
+    /// </summary>
+    private bool _resolveAdditiveBaseFromRegistry = true;
+    public bool ResolveAdditiveBaseFromRegistry
+    {
+        get => _resolveAdditiveBaseFromRegistry;
+        set
+        {
+            SetProperty(ref _resolveAdditiveBaseFromRegistry, value);
+            AdditiveBasePose.UseDependencyGraph = value;
+        }
     }
 
     private bool _saveEmbeddedMaterials = true;

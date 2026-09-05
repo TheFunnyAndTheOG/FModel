@@ -529,7 +529,7 @@ public class CUE4ParseViewModel : ViewModel
         if (Provider.Versions["StripAdditiveRefPose"])
         {
             FLogger.Append(ELog.Warning, () =>
-                FLogger.Text("Additive animations have their reference pose stripped, which will lead to inaccurate preview and export", Constants.WHITE, true));
+                FLogger.Text("Additive animations were cooked without their base pose reference. It is recovered from the asset name where possible and shown as RecoveredRefPoseSeq; where it is not, preview and a flattened export fall back to the skeleton rest pose. \"Keep Additive Animations\" exports the deltas and needs no base at all.", Constants.WHITE, true));
         }
 
         if (Provider.Versions.Game is GAME_UE4_LATEST or GAME_UE5_LATEST && !Provider.ProjectName.Equals("FortniteGame", StringComparison.OrdinalIgnoreCase)) // ignore fortnite globally

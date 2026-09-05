@@ -166,6 +166,12 @@ public class ExportOptionsViewModel : ViewModel
         set => SetProperty(ref field, value);
     }
 
+    public bool PreserveAdditiveAnimations
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
     public bool ExportAllTextureMips
     {
         get;
@@ -193,6 +199,7 @@ public class ExportOptionsViewModel : ViewModel
         ExportHdrTexturesAsHdr = UserSettings.Default.SaveHdrTexturesAsHdr;
         ExportMorphTargets = UserSettings.Default.SaveMorphTargets;
         BakeFacialPoses = UserSettings.Default.BakeFacialPoses;
+        PreserveAdditiveAnimations = UserSettings.Default.PreserveAdditiveAnimations;
         TextureQuality = UserSettings.Default.TextureQuality;
         ExportAllTextureMips = UserSettings.Default.ExportAllTextureMips;
         ExportImmediately = UserSettings.Default.ExportImmediately;
@@ -216,6 +223,7 @@ public class ExportOptionsViewModel : ViewModel
         UserSettings.Default.SaveHdrTexturesAsHdr = ExportHdrTexturesAsHdr;
         UserSettings.Default.SaveMorphTargets = ExportMorphTargets;
         UserSettings.Default.BakeFacialPoses = BakeFacialPoses;
+        UserSettings.Default.PreserveAdditiveAnimations = PreserveAdditiveAnimations;
         UserSettings.Default.TextureQuality = TextureQuality;
         UserSettings.Default.ExportAllTextureMips = ExportAllTextureMips;
         UserSettings.Default.ExportImmediately = ExportImmediately;
@@ -238,6 +246,7 @@ public class ExportOptionsViewModel : ViewModel
         ExportMaterials,
         ExportMorphTargets,
         BakeFacialPoses,
+        PreserveAdditiveAnimations,
         SelectedSocketFormat,
         SelectedCompressionFormat
     );

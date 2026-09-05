@@ -33,6 +33,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
@@ -276,8 +277,8 @@
                   Content="{Binding IsChecked, RelativeSource={RelativeSource Self}, Converter={x:Static converters:BoolToToggleConverter.Instance}}"
                   Style="{DynamicResource {x:Static adonisUi:Styles.ToggleSwitch}}" />
 
-        <TextBlock Grid.Row="20" Grid.Column="0" Text="Bake Facial Poses" VerticalAlignment="Center" Margin="0 0 0 15" />
-        <Grid Grid.Row="20" Grid.Column="2" Grid.ColumnSpan="3" Margin="0 0 0 15">
+        <TextBlock Grid.Row="20" Grid.Column="0" Text="Bake Facial Poses" VerticalAlignment="Center" />
+        <Grid Grid.Row="20" Grid.Column="2" Grid.ColumnSpan="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -290,6 +291,22 @@
             <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="5 0 0 0" FontSize="11"
                        Foreground="{DynamicResource {x:Static adonisUi:Brushes.DisabledForegroundBrush}}"
                        Text="Skins a head's DNA or pose asset expressions into extra morph targets." />
+        </Grid>
+
+        <TextBlock Grid.Row="21" Grid.Column="0" Text="Keep Additive Animations" VerticalAlignment="Center" Margin="0 0 0 15" />
+        <Grid Grid.Row="21" Grid.Column="2" Grid.ColumnSpan="3" Margin="0 0 0 15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <CheckBox Grid.Column="0"
+                      IsChecked="{Binding PreserveAdditiveAnimations, Mode=TwoWay}"
+                      Content="{Binding IsChecked, RelativeSource={RelativeSource Self}, Converter={x:Static converters:BoolToToggleConverter.Instance}}"
+                      Style="{DynamicResource {x:Static adonisUi:Styles.ToggleSwitch}}" />
+            <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="5 0 0 0" FontSize="11"
+                       Foreground="{DynamicResource {x:Static adonisUi:Brushes.DisabledForegroundBrush}}"
+                       Text="Writes an additive's deltas to ueanim instead of flattening them onto a base pose." />
         </Grid>
     </Grid>
 </UserControl>
