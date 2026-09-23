@@ -286,7 +286,7 @@ public static class PixelShaderDecompiler
     {
         var chain = new List<UMaterialInterface> { material };
         var guard = 0;
-        while (chain[^1] is UMaterialInstance instance && instance.Parent is UMaterialInterface parent && ++guard < 16)
+        while (chain[^1] is UMaterialInstance instance && instance.Parent?.Load<UMaterialInterface>() is { } parent && ++guard < 16)
             chain.Add(parent);
         return chain;
     }
