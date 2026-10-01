@@ -401,10 +401,35 @@ public class CUE4ParseViewModel : ViewModel
     {
         Provider.SubmitKeys(aesKeys);
         Provider.PostMount();
+        ApplyFortniteConsoleVariableFallback();
 
         var aesMax = Provider.RequiredKeys.Count + Provider.Keys.Count;
         var archiveMax = Provider.UnloadedVfs.Count + Provider.MountedVfs.Count;
         Log.Information($"Project: {Provider.ProjectName} | Mounted: {Provider.MountedVfs.Count}/{archiveMax} | AES: {Provider.Keys.Count}/{aesMax} | Files: x{Provider.Files.Count}");
+    }
+
+    /// <summary>
+    /// Fortnite cooks every mesh with r.SkeletalMesh/r.StaticMesh.KeepMobileMinLODSettingOnDesktop=1, but CUE4Parse only learns
+    /// that from DefaultEngine.ini, which lives behind the main AES key. On a fresh build the main key is often not public yet,
+    /// the ini stays unreadable, both options keep their 'false' default and every mesh is read 4 bytes off (Nanite overruns,
+    /// "Skeletal mesh has no LODs"). Fall back to Fortnite's known values unless the user overrode them.
+    /// </summary>
+    private void ApplyFortniteConsoleVariableFallback()
+    {
+        if (Provider.DefaultEngine.Sections.Count > 0 || Provider.Versions.Game < GAME_UE5_0 ||
+            !Provider.ProjectName.Equals("FortniteGame", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        var overrides = UserSettings.Default.CurrentDir.Versioning.Options;
+        foreach (var option in (string[]) ["SkeletalMesh.KeepMobileMinLODSettingOnDesktop", "StaticMesh.KeepMobileMinLODSettingOnDesktop"])
+        {
+            if (overrides?.ContainsKey(option) == true) continue;
+            Provider.Versions[option] = true;
+        }
+
+        Log.Warning("DefaultEngine.ini is unreadable (main AES key missing?), assuming Fortnite's KeepMobileMinLODSettingOnDesktop=1");
+        FLogger.Append(ELog.Warning, () =>
+            FLogger.Text("DefaultEngine.ini could not be read, most likely because the main AES key for this build is not available yet. Fortnite's mesh settings were assumed so meshes still load.", Constants.WHITE, true));
     }
 
     public void ClearProvider()
@@ -510,7 +535,8 @@ public class CUE4ParseViewModel : ViewModel
 
                 if (Provider.MappingsContainer == null)
                 {
-                    var latestUsmaps = new DirectoryInfo(mappingsFolder).GetFiles("*_oo.usmap");
+                    // any compression: uedb.dev serves ZStandard (_zs) now, and an _oo-only search picks a stale build's usmap
+                    var latestUsmaps = new DirectoryInfo(mappingsFolder).GetFiles("*.usmap");
                     if (latestUsmaps.Length <= 0) return;
 
                     var latestUsmapInfo = latestUsmaps.OrderBy(f => f.LastWriteTime).Last();
