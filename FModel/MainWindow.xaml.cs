@@ -306,15 +306,11 @@ public partial class MainWindow
 
     public void SelectAsset(GameFileViewModel asset)
     {
-        var useExplorer = UserSettings.Default.FeaturePreviewNewAssetExplorer;
+        // always land on the file itself in the packages tab, even with the new explorer on: the explorer
+        // only shows the folder with the file highlighted somewhere in it, which reads as "jumped to the folder"
+        _applicationView.SelectedLeftTabIndex = 2;
 
-        _applicationView.SelectedLeftTabIndex = useExplorer ? 1 : 2;
-        if (useExplorer)
-        {
-            _applicationView.IsAssetsExplorerVisible = true;
-        }
-
-        var list = useExplorer ? UserSettings.Default.ExplorerViewMode == EExplorerViewMode.List ? AssetsListExplorer : AssetsExplorer : AssetsListName;
+        var list = AssetsListName;
         list.GetBindingExpression(ItemsControl.ItemsSourceProperty)?.UpdateTarget();
         list.UnselectAll();
         list.SelectedItem = asset;
